@@ -4,11 +4,14 @@ CPU_HZ=16000000
 BUILD_DIR=./build
 GCC_FLAGS= -mmcu=${CPU} -DF_CPU=${CPU_HZ}UL
 
-default:
+default: spi
 	avr-gcc ${GCC_FLAGS} -c -o ${BUILD_DIR}/main.o main.cc
 
-	avr-gcc ${GCC_FLAGS} -o ${BUILD_DIR}/main.elf ${BUILD_DIR}/main.o
+	avr-gcc ${GCC_FLAGS} -o ${BUILD_DIR}/main.elf ${BUILD_DIR}/main.o ${BUILD_DIR}/spi.o
 	
+spi:
+	avr-gcc ${GCC_FLAGS} -c -o ${BUILD_DIR}/spi.o spi.cc
+
 burn:
 	sudo avrdude \
 		-p ${CPU} \
@@ -18,7 +21,6 @@ burn:
 
 clean:
 	rm  ${BUILD_DIR}/*
-	rm elf.text
 
 text:
 	avr-objdump -D ${BUILD_DIR}/main.elf > elf.txt

@@ -1,21 +1,33 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include "spi.h"
 
 #define F_CPU 16000000UL // ATmega328P clock frequency
 #define BAUD 9600       // Desired baud rate
 
 // Function prototypes
+void USART_TX_HEX(uint8_t data);
 void initUSART();
 void USART_transmit(uint8_t data);
 uint8_t USART_receive();
 
 int main(void) {
+
     // Make data out for pin b5
     DDRB |= (1 << DDB5);
+
+    SPI spi;
+    uint8_t response;
+    
+    // Reset.
+    spi.send_instruction(0b11000000, 0, &response);
+
+    spi.send_instruction(0b00000011, 0x0f, &response);
 
 
     // Initialize USART
     initUSART();
+    USART_TX_HEX(response);
 
     // Enable global interrupts
     sei();
@@ -44,13 +56,26 @@ void initUSART() {
     UCSR0C |= (1 << USBS0) | (3 << UCSZ00);
 }
 
+void USART_TX_HEX(uint8_t data) {
+    const char * hexTable = "0123456789abcdef";
+    uint8_t dataLow = hexTable[(data & 0x0f)];
+    uint8_t dataHigh = hexTable[(data & 0xf0) >> 4];
+
+    USART_transmit('0');
+    USART_transmit('x');
+    USART_transmit(dataHigh);
+    USART_transmit(dataLow);
+    USART_transmit('\n');
+    USART_transmit('\r');
+}
+
 void USART_transmit(uint8_t data) {
     // Wait until the transmit buffer is empty
     /* Check the USART Data Register Empty bit of the 
     USART Control and Status Register A. 
     I'm curious if nothing else puts data in UDR0 I/O
     if it is necessary to have this while loop. */
-    // while (!(UCSR0A & (1 << UDRE0)));
+    while (!(UCSR0A & (1 << UDRE0)));
 
     // Put the data into the transmit buffer
     UDR0 = data;
@@ -62,7 +87,7 @@ uint8_t USART_receive() {
     receive complete ISR then we know RXC0 of UCSR0A
     ~should~ be set skip check */
     // while (!(UCSR0A & (1 << RXC0)));
-
+    
     // Return the received data
     return UDR0;
 }
