@@ -77,3 +77,50 @@ void SPI::send_instruction(uint8_t instruction, uint8_t data, uint8_t *response 
     return;
 }
 
+void SPI::read_instruction(uint8_t instruction, uint8_t address, uint8_t *data) {
+    send_instruction(instruction, address, data);
+}
+
+void SPI::write_instruction(uint8_t instruction, uint8_t address, uint8_t data) {
+     // select chip.
+    CS_HIGH();
+    CS_LOW();
+    
+    // For every bit in the instruction.
+    for (int8_t i = 7; i >= 0; i--) {
+        // Toggle MOSI line.
+        (instruction & (1 << i)) ? SI_HIGH() : SI_LOW();
+
+        // MOSI read on SCK rising edge.
+        SCK_LOW();
+        SCK_HIGH();
+
+    }
+
+    // For every bit in the data.
+    for (int8_t i = 7; i >= 0; i--) {
+        // Toggle MOSI line.
+        (address & (1 << i)) ? SI_HIGH() : SI_LOW();
+
+        // MOSI read on rising edge.
+        SCK_LOW();
+        SCK_HIGH();
+    }
+
+    // For every bit of the response.
+    for (int8_t i = 7; i >= 0; i--) {
+        // Toggle MOSI line.
+        (data & (1 << i)) ? SI_HIGH() : SI_LOW();
+
+        // MOSI read on falling edge.
+        SCK_LOW();
+        SCK_HIGH();
+    }
+
+    
+
+    // raise chip select to complete instruction.
+    CS_HIGH();
+
+    return;
+}

@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include "spi.h"
+// #include "spi.h"
+#include "mcp2515.h"
 
 #define F_CPU 16000000UL // ATmega328P clock frequency
 #define BAUD 9600       // Desired baud rate
@@ -16,17 +17,15 @@ int main(void) {
     // Make data out for pin b5
     DDRB |= (1 << DDB5);
 
-    SPI spi;
-    uint8_t response;
-    
-    // Reset.
-    spi.send_instruction(0b11000000, 0, &response);
-
-    spi.send_instruction(0b00000011, 0x0f, &response);
-
-
     // Initialize USART
     initUSART();
+    
+    // MCP2515 controller object.
+    MCP2515 mcp2515 = MCP2515();
+
+    // Serial out hex data from mcp2515.
+    uint8_t response;
+    mcp2515.read(0x29, &response);
     USART_TX_HEX(response);
 
     // Enable global interrupts

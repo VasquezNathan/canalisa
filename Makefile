@@ -4,13 +4,16 @@ CPU_HZ=16000000
 BUILD_DIR=./build
 GCC_FLAGS= -mmcu=${CPU} -DF_CPU=${CPU_HZ}UL
 
-default: spi
+default: spi mcp2515
 	avr-gcc ${GCC_FLAGS} -c -o ${BUILD_DIR}/main.o main.cc
 
-	avr-gcc ${GCC_FLAGS} -o ${BUILD_DIR}/main.elf ${BUILD_DIR}/main.o ${BUILD_DIR}/spi.o
+	avr-gcc ${GCC_FLAGS} -o ${BUILD_DIR}/main.elf ${BUILD_DIR}/main.o ${BUILD_DIR}/spi.o ${BUILD_DIR}/mcp2515.o
 	
 spi:
 	avr-gcc ${GCC_FLAGS} -c -o ${BUILD_DIR}/spi.o spi.cc
+
+mcp2515:
+	avr-gcc ${GCC_FLAGS} -c -o ${BUILD_DIR}/mcp2515.o mcp2515.cc
 
 burn:
 	sudo avrdude \
